@@ -1,0 +1,9 @@
+# OS-specific
+.DS_Store
+
+# Environment file
+.env
+
+# WordPress core, plugins, and uploads
+/wordpress/
+/db_data/
