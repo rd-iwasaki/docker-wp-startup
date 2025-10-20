@@ -1,9 +1,28 @@
 #!/bin/bash
 
+# スクリプトがどのディレクトリで実行されても、スクリプト自身の場所を基準に動作するようにします。
+cd "$(dirname "$0")"
+
 # 色付け用の変数
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
+
+# --- curl経由での実行に対応 ---
+# 必要なファイルが存在しない場合、GitHubからダウンロードします。
+REPO_RAW_URL="https://raw.githubusercontent.com/rd-iwasaki/docker-wp-startup/main"
+
+if [ ! -f "docker-compose.yml" ]; then
+  echo -e "${GREEN}docker-compose.yml をダウンロードします...${NC}"
+  curl -fsSL -o docker-compose.yml "${REPO_RAW_URL}/docker-compose.yml"
+fi
+
+if [ ! -f ".env.example" ]; then
+  echo -e "${GREEN}.env.example をダウンロードします...${NC}"
+  curl -fsSL -o .env.example "${REPO_RAW_URL}/.env.example"
+fi
+# --- ここまで ---
+
 
 # Dockerがインストールされているかチェック
 if ! [ -x "$(command -v docker)" ]; then
