@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 # スクリプトがどのディレクトリで実行されても、スクリプト自身の場所を基準に動作するようにします。
 # ただし、`curl ... | bash` や `bash -c "$(curl ...)"` のように実行された場合は、
 # ユーザーがコマンドを実行したカレントディレクトリを基準とします。
@@ -43,7 +45,10 @@ fi
 if [ ! -f .env ]; then
   echo -e "${YELLOW}.env ファイルが見つかりません。${NC}"
   echo -e "'.env.example' をコピーして '.env' を作成します。"
-  cp .env.example .env
+  if ! cp .env.example .env; then
+    echo -e "\033[0;31mエラー: .env.example のコピーに失敗しました。ダウンロードが正常に行われたか確認してください。${NC}" >&2
+    exit 1
+  fi
   echo -e "${GREEN}.env ファイルを作成しました。${NC}"
 fi
 
