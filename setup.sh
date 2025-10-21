@@ -26,12 +26,12 @@ REPO_RAW_URL="https://raw.githubusercontent.com/rd-iwasaki/docker-wp-startup/mai
 
 if [ ! -f "docker-compose.yml" ]; then
   echo -e "${GREEN}docker-compose.yml をダウンロードします...${NC}"
-  curl -fsSL -o docker-compose.yml "${REPO_RAW_URL}/docker-compose.yml"
+  curl -fsSL -o docker-compose.yml "${REPO_RAW_URL}/docker-compose.yml" < /dev/null
 fi
 
 if [ ! -f ".env.example" ]; then
   echo -e "${GREEN}.env.example をダウンロードします...${NC}"
-  curl -fsSL -o .env.example "${REPO_RAW_URL}/.env.example"
+  curl -fsSL -o .env.example "${REPO_RAW_URL}/.env.example" < /dev/null
 fi
 # --- ここまで ---
 
