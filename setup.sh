@@ -94,6 +94,21 @@ until docker-compose exec db mysqladmin ping -h"localhost" -u"${MYSQL_USER}" -p"
 done
 echo -e "\n${GREEN}✅ データベースの準備が完了しました。${NC}"
 
+# WordPressのコアファイルがボリュームにコピーされるまで待機
+echo "WordPressのコアファイルが準備されるまで待機しています..."
+until docker-compose exec wordpress test -f /var/www/html/wp-config-sample.php; do
+    echo -n "."
+    sleep 2
+done
+echo -e "\n${GREEN}✅ WordPressのコアファイルが準備されました。${NC}"
+
+# wp-config.phpを作成
+echo "wp-config.phpを作成しています..."
+docker-compose exec wp-cli wp config create \
+    --dbname="${MYSQL_DATABASE}" --dbuser="${MYSQL_USER}" --dbpass="${MYSQL_PASSWORD}" --dbhost="db:3306" \
+    --allow-root
+echo -e "${GREEN}✅ wp-config.phpが作成されました。${NC}"
+
 # WordPressがインストール済みかチェック
 if ! docker-compose exec wp-cli wp core is-installed --allow-root; then
     echo "WordPressをインストールします..."
