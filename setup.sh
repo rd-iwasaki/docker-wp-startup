@@ -109,7 +109,7 @@ docker-compose exec wp-cli wp config create \
     --allow-root
 
 # SSL接続エラーを回避するために設定を追加
-docker-compose exec wp-cli wp config set 'MYSQL_CLIENT_FLAGS' 'MYSQLI_CLIENT_SSL_DONT_VERIFY' --raw --allow-root
+docker-compose exec wp-cli wp config set 'MYSQL_CLIENT_FLAGS' 0 --type=variable --anchor='$table_prefix' --allow-root
 
 echo -e "${GREEN}✅ wp-config.phpが作成されました。${NC}"
 
