@@ -69,6 +69,14 @@ if ! docker info &> /dev/null; then
     exit 1
 fi
 
+# .envからポート番号を読み込み、使用中かチェック
+source .env
+if lsof -i -P -n | grep -q ":${WORDPRESS_PORT} (LISTEN)"; then
+    echo -e "${RED}❌ エラー: ポート ${WORDPRESS_PORT} は既に使用されています。${NC}"
+    echo -e "${YELLOW}他のプロセスを停止するか、.env ファイルの WORDPRESS_PORT を別の番号に変更してください。${NC}"
+    exit 1
+fi
+
 docker-compose up -d --build
 
 # --- 5. WordPressの初期設定とプラグインのインストール ---
@@ -91,7 +99,7 @@ if ! docker-compose exec wp-cli wp core is-installed --allow-root; then
     echo "WordPressをインストールします..."
 
     # サイト名、管理者情報を指定してインストール
-    docker-compose exec wp-cli wp core install --url="http://localhost:${WORDPRESS_PORT}" --title="ローカル環境" --admin_user="${WORDPRESS_ADMIN_USER}" --admin_password="${WORDPRESS_ADMIN_PASSWORD}" --admin_email="${WORDPRESS_ADMIN_USER}@example.com" --allow-root
+    docker-compose exec wp-cli wp core install --url="http://localhost:${WORDPRESS_PORT}" --title="${WORDPRESS_SITE_TITLE}" --admin_user="${WORDPRESS_ADMIN_USER}" --admin_password="${WORDPRESS_ADMIN_PASSWORD}" --admin_email="${WORDPRESS_ADMIN_EMAIL}" --allow-root
 else
     echo "WordPressは既にインストールされています。"
 fi
