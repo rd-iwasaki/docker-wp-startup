@@ -87,12 +87,13 @@ echo -e "${GREEN}▶ WordPressの初期設定とプラグインのインスト�
 source .env
 
 # データベースが利用可能になるまで待機
-echo "データベースの準備が整うまで待機しています..."
-until docker-compose exec db mysqladmin ping -h"localhost" -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" --silent; do
+echo "データベース接続が確立できるまで待機しています..."
+# wp-cliコンテナからDB接続を試行し、成功するまでループする
+until docker-compose exec -T wp-cli wp db check --quiet; do
     echo -n "."
     sleep 2
 done
-echo -e "\n${GREEN}✅ データベースの準備が完了しました。${NC}"
+echo -e "\n${GREEN}✅ データベース接続が確立されました。${NC}"
 
 # WordPressのコアファイルがボリュームにコピーされるまで待機
 echo "WordPressのコアファイルが準備されるまで待機しています..."
