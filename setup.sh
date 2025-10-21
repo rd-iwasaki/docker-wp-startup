@@ -96,7 +96,7 @@ echo -e "\n${GREEN}✅ データベースの準備が完了しました。${NC}"
 
 # WordPressのコアファイルがボリュームにコピーされるまで待機
 echo "WordPressのコアファイルが準備されるまで待機しています..."
-until docker-compose exec wordpress test -f /var/www/html/wp-config-sample.php; do
+until docker-compose exec wordpress test -f /var/www/html/wp-includes/version.php; do
     echo -n "."
     sleep 2
 done
