@@ -17,6 +17,7 @@ fi
 # 色付け用の変数
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
+RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 # --- curl経由での実行に対応 ---
@@ -25,30 +26,31 @@ REPO_RAW_URL="https://raw.githubusercontent.com/rd-iwasaki/docker-wp-startup/mai
 
 if [ ! -f "docker-compose.yml" ]; then
   echo -e "${GREEN}docker-compose.yml をダウンロードします...${NC}"
-  curl -fsSL -o docker-compose.yml "${REPO_RAW_URL}/docker-compose.yml" < /dev/null
+  curl -fsSL -o docker-compose.yml "${REPO_RAW_URL}/docker-compose.yml"
 fi
 
 if [ ! -f ".env.example" ]; then
   echo -e "${GREEN}.env.example をダウンロードします...${NC}"
-  curl -fsSL -o .env.example "${REPO_RAW_URL}/.env.example" < /dev/null
+  curl -fsSL -o .env.example "${REPO_RAW_URL}/.env.example"
 fi
 # --- ここまで ---
 
 
 # Dockerがインストールされているかチェック
 if ! [ -x "$(command -v docker)" ]; then
-  echo -e "${YELLOW}エラー: Dockerがインストールされていないようです。Docker Desktopをインストールしてください。${NC}" >&2
+  echo -e "${RED}エラー: Dockerがインストールされていないようです。Docker Desktopをインストールしてください。${NC}" >&2
   exit 1
 fi
 
 # .envファイルが存在するかチェック
 if [ ! -f .env ]; then
   echo -e "${YELLOW}.env ファイルが見つかりません。${NC}"
-  echo -e "'.env.example' をコピーして '.env' を作成します。"
-  if ! cp .env.example .env; then
-    echo -e "\033[0;31mエラー: .env.example のコピーに失敗しました。ダウンロードが正常に行われたか確認してください。${NC}" >&2
+  if [ ! -f ".env.example" ]; then
+    echo -e "${RED}エラー: .env.example が見つかりません。ダウンロードに失敗した可能性があります。${NC}" >&2
     exit 1
   fi
+  echo -e "'.env.example' をコピーして '.env' を作成します。"
+  cp .env.example .env
   echo -e "${GREEN}.env ファイルを作成しました。${NC}"
 fi
 
@@ -59,9 +61,16 @@ echo "編集が終わったら、このターミナルに戻ってEnterキーを
 echo "--------------------------------------------------"
 
 # ユーザーがEnterキーを押すのを待つ
-read -p ""
+# < /dev/tty を追加することで、パイプ経由ではなくターミナルから直接入力を受け取る
+read -p "" < /dev/tty
 
 echo -e "${GREEN}設定を読み込み、環境構築を開始します...${NC}"
+
+# Dockerデーモンが起動しているかチェック
+if ! docker info > /dev/null 2>&1; then
+  echo -e "${RED}エラー: Dockerデーモンが起動していません。Docker Desktopを起動してから再度お試しください。${NC}" >&2
+  exit 1
+fi
 
 # .env ファイルを読み込んでDocker Composeを起動
 docker-compose up -d --build
