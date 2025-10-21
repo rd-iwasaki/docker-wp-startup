@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: mysql:${MYSQL_VERSION}
@@ -41,6 +39,7 @@ services:
     depends_on:
       - db
       - wordpress
+    command: tail -f /dev/null
     volumes:
       - ./wordpress:/var/www/html
     environment:
