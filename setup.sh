@@ -5,7 +5,8 @@ set -euo pipefail
 # --- 1. 必要なファイルをGitHubから直接ダウンロード ---
 
 echo "▶ 必要なファイルをダウンロードしています..."
-REPO_URL="https://raw.githubusercontent.com/rd-iwasaki/create-dev-environment/main"
+REPO_URL="https://raw.githubusercontent.com/rd-iwasaki/docker-wp-startup/main"
+
 
 # ダウンロード先のディレクトリを作成
 mkdir -p public
