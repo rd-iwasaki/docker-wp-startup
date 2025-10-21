@@ -35,6 +35,22 @@ services:
     networks:
       - wp-network
 
+  wp-cli:
+    image: wordpress:cli-php${PHP_VERSION}
+    container_name: ${COMPOSE_PROJECT_NAME}_wp-cli
+    depends_on:
+      - db
+      - wordpress
+    volumes:
+      - ./wordpress:/var/www/html
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: ${MYSQL_USER}
+      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
+      WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
+    networks:
+      - wp-network
+
 volumes:
   db_data:
 

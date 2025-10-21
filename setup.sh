@@ -21,6 +21,7 @@ mkdir -p wordpress
 declare -a FILES=(
     ".env.example"
     "docker-compose.yml"
+    "plugins.txt"
 )
 
 # 各ファイルをダウンロード
@@ -70,11 +71,48 @@ fi
 
 docker-compose up -d --build
 
-# --- 5. 完了メッセージ ---
+# --- 5. WordPressの初期設定とプラグインのインストール ---
+echo ""
+echo -e "${GREEN}▶ WordPressの初期設定とプラグインのインストールを行います...${NC}"
+
+# データベースが利用可能になるまで待機
+echo "データベースの準備が整うまで待機しています..."
+until docker-compose exec db mysqladmin ping -h"localhost" -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" --silent; do
+    echo -n "."
+    sleep 2
+done
+echo -e "\n${GREEN}✅ データベースの準備が完了しました。${NC}"
+
+# WordPressがインストール済みかチェック
+if ! docker-compose exec wp-cli wp core is-installed --allow-root; then
+    echo "WordPressをインストールします..."
+    # .envからポート番号を読み込む
+    # .envから必要な変数を読み込む
+    source .env
+
+    # サイト名、管理者情報を指定してインストール
+    docker-compose exec wp-cli wp core install --url="http://localhost:${WORDPRESS_PORT}" --title="ローカル環境" --admin_user="${WORDPRESS_ADMIN_USER}" --admin_password="${WORDPRESS_ADMIN_PASSWORD}" --admin_email="${WORDPRESS_ADMIN_USER}@example.com" --allow-root
+else
+    echo "WordPressは既にインストールされています。"
+fi
+
+# plugins.txtからプラグインをインストール
+if [ -f "plugins.txt" ]; then
+    echo "プラグインをインストール・有効化します..."
+    # xargsを使って、ファイル内の各行を引数としてwp-cliに渡す
+    # 空行は無視するように grep . を挟む
+    grep . plugins.txt | xargs -I {} docker-compose exec wp-cli wp plugin install {} --activate --allow-root
+fi
+
+# --- 6. 完了メッセージ ---
 echo ""
 echo -e "${GREEN}✅ 環境構築が完了しました！${NC}"
 
 # .envファイルからポート番号を読み込んでURLを表示
-WORDPRESS_PORT=$(grep WORDPRESS_PORT .env | cut -d '=' -f2)
-echo "WordPressの初期設定画面にアクセスしてください: ${YELLOW}http://localhost:${WORDPRESS_PORT}${NC}"
+# .envから必要な変数を読み込む
+source .env
+
+echo "WordPressサイトにアクセスしてください: ${YELLOW}http://localhost:${WORDPRESS_PORT}/wp-admin/${NC}"
+echo "管理者ユーザー名: ${YELLOW}${WORDPRESS_ADMIN_USER}${NC}"
+echo "管理者パスワード: ${YELLOW}${WORDPRESS_ADMIN_PASSWORD}${NC}"
 echo ""
