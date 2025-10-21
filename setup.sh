@@ -75,6 +75,9 @@ docker-compose up -d --build
 echo ""
 echo -e "${GREEN}▶ WordPressの初期設定とプラグインのインストールを行います...${NC}"
 
+# .envから必要な変数を読み込む
+source .env
+
 # データベースが利用可能になるまで待機
 echo "データベースの準備が整うまで待機しています..."
 until docker-compose exec db mysqladmin ping -h"localhost" -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" --silent; do
@@ -86,9 +89,6 @@ echo -e "\n${GREEN}✅ データベースの準備が完了しました。${NC}"
 # WordPressがインストール済みかチェック
 if ! docker-compose exec wp-cli wp core is-installed --allow-root; then
     echo "WordPressをインストールします..."
-    # .envからポート番号を読み込む
-    # .envから必要な変数を読み込む
-    source .env
 
     # サイト名、管理者情報を指定してインストール
     docker-compose exec wp-cli wp core install --url="http://localhost:${WORDPRESS_PORT}" --title="ローカル環境" --admin_user="${WORDPRESS_ADMIN_USER}" --admin_password="${WORDPRESS_ADMIN_PASSWORD}" --admin_email="${WORDPRESS_ADMIN_USER}@example.com" --allow-root
@@ -109,9 +109,6 @@ echo ""
 echo -e "${GREEN}✅ 環境構築が完了しました！${NC}"
 
 # .envファイルからポート番号を読み込んでURLを表示
-# .envから必要な変数を読み込む
-source .env
-
 echo "WordPressサイトにアクセスしてください: ${YELLOW}http://localhost:${WORDPRESS_PORT}/wp-admin/${NC}"
 echo "管理者ユーザー名: ${YELLOW}${WORDPRESS_ADMIN_USER}${NC}"
 echo "管理者パスワード: ${YELLOW}${WORDPRESS_ADMIN_PASSWORD}${NC}"
