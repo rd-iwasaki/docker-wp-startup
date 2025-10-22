@@ -77,6 +77,12 @@ if lsof -i -P -n | grep -q ":${WORDPRESS_PORT} (LISTEN)"; then
     exit 1
 fi
 
+# WORDPRESS_VERSIONが'latest'の場合、docker-composeが正しいイメージタグを解決できるように変数を調整する
+if [ "${WORDPRESS_VERSION}" = "latest" ]; then
+    # 'latest-phpX.Y'というタグは存在しないため、'latest'の部分を空にする
+    export WORDPRESS_VERSION=""
+fi
+
 docker-compose up -d --build
 
 # --- 5. WordPressの初期設定とプラグインのインストール ---
