@@ -136,7 +136,8 @@ if ! docker-compose exec wp-cli wp core is-installed --allow-root; then
     echo "WordPressの言語設定を日本語にしています..."
     docker-compose exec wp-cli wp core update-db --allow-root
     docker-compose exec wp-cli wp language core install ja --allow-root
-    docker-compose exec wp-cli wp site switch-to-locale ja --allow-root
+    # 'wp site switch-to-locale'はマルチサイト用。シングルサイトでは'wp option update WPLANG'を使用する。
+    docker-compose exec wp-cli wp option update WPLANG ja --allow-root
     echo -e "${GREEN}✅ WordPressのインストールと日本語設定が完了しました。${NC}"
 else
     echo "WordPressは既にインストールされています。"
