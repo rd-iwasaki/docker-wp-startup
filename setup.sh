@@ -77,12 +77,13 @@ if lsof -i -P -n | grep -q ":${WORDPRESS_PORT} (LISTEN)"; then
     exit 1
 fi
 
-# WORDPRESS_VERSIONが'latest'の場合、docker-composeが正しいイメージタグを解決できるように変数を調整する
+# WordPressのバージョンに応じて、使用するDockerイメージのタグを決定する
 if [ "${WORDPRESS_VERSION}" = "latest" ]; then
-    # 'wordpress:latest-phpX.Y-apache' というタグは存在しないためエラーになる。
-    # 'wordpress:phpX.Y-apache' というタグは「PHP X.Yで動作する最新のWordPress」を意味する。
-    # そのため、WORDPRESS_VERSIONを空にすることで、docker-compose.ymlが 'wordpress:-phpX.Y-apache' -> 'wordpress:phpX.Y-apache' と解釈するように仕向ける。
-    export WORDPRESS_VERSION=""
+    # 'latest'の場合は、PHPバージョンのみのタグを指定 (例: wordpress:php8.2-apache)
+    export WORDPRESS_IMAGE_TAG="php${PHP_VERSION}-apache"
+else
+    # バージョン指定がある場合は、バージョンとPHPバージョンを組み合わせたタグを指定 (例: wordpress:6.5-php8.2-apache)
+    export WORDPRESS_IMAGE_TAG="${WORDPRESS_VERSION}-php${PHP_VERSION}-apache"
 fi
 
 docker-compose up -d --build
