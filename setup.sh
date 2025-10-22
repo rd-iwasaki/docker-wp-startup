@@ -143,18 +143,6 @@ else
     echo "WordPressは既にインストールされています。"
 fi
 
-# plugins.txtからプラグインをインストール
-if [ -s "plugins.txt" ]; then # -s: ファイルが存在し、かつ空でないことを確認
-    echo "プラグインをインストール・有効化します..."
-    # xargsではなくwhile readループを使うことで、各行をより確実に処理する
-    while IFS= read -r plugin || [[ -n "$plugin" ]]; do
-        if [ -n "$plugin" ]; then # 空行をスキップ
-            echo "プラグイン '${plugin}' をインストール・有効化しています..."
-            docker-compose exec -T wp-cli wp plugin install "$plugin" --activate --allow-root
-        fi
-    done < plugins.txt
-fi
-
 # --- 6. 完了メッセージ ---
 echo ""
 echo -e "${GREEN}✅ 環境構築が完了しました！${NC}"
