@@ -79,7 +79,9 @@ fi
 
 # WORDPRESS_VERSIONが'latest'の場合、docker-composeが正しいイメージタグを解決できるように変数を調整する
 if [ "${WORDPRESS_VERSION}" = "latest" ]; then
-    # 'latest-phpX.Y'というタグは存在しないため、'latest'の部分を空にする
+    # 'wordpress:latest-phpX.Y-apache' というタグは存在しないためエラーになる。
+    # 'wordpress:phpX.Y-apache' というタグは「PHP X.Yで動作する最新のWordPress」を意味する。
+    # そのため、WORDPRESS_VERSIONを空にすることで、docker-compose.ymlが 'wordpress:-phpX.Y-apache' -> 'wordpress:phpX.Y-apache' と解釈するように仕向ける。
     export WORDPRESS_VERSION=""
 fi
 
