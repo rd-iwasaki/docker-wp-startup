@@ -77,13 +77,15 @@ if lsof -i -P -n | grep -q ":${WORDPRESS_PORT} (LISTEN)"; then
     exit 1
 fi
 
-# WordPressのバージョンに応じて、使用するDockerイメージのタグを決定する
+# WordPressのバージョンに応じて、使用するDockerイメージのタグを決定し、.envファイルに追記する
+# これにより、`curl | bash` 形式で実行した場合でもdocker-composeが変数を確実に読み込める
+echo "" >> .env # 追記前に改行を一つ入れる
 if [ "${WORDPRESS_VERSION}" = "latest" ]; then
     # 'latest'の場合は、PHPバージョンのみのタグを指定 (例: wordpress:php8.2-apache)
-    export WORDPRESS_IMAGE_TAG="php${PHP_VERSION}-apache"
+    echo "WORDPRESS_IMAGE_TAG=php${PHP_VERSION}-apache" >> .env
 else
     # バージョン指定がある場合は、バージョンとPHPバージョンを組み合わせたタグを指定 (例: wordpress:6.5-php8.2-apache)
-    export WORDPRESS_IMAGE_TAG="${WORDPRESS_VERSION}-php${PHP_VERSION}-apache"
+    echo "WORDPRESS_IMAGE_TAG=${WORDPRESS_VERSION}-php${PHP_VERSION}-apache" >> .env
 fi
 
 docker-compose up -d --build
