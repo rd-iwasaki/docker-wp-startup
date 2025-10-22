@@ -119,16 +119,27 @@ if ! docker-compose exec wp-cli wp core is-installed --allow-root; then
 
     # サイト名、管理者情報を指定してインストール
     docker-compose exec wp-cli wp core install --url="http://localhost:${WORDPRESS_PORT}" --title="${WORDPRESS_SITE_TITLE}" --admin_user="${WORDPRESS_ADMIN_USER}" --admin_password="${WORDPRESS_ADMIN_PASSWORD}" --admin_email="${WORDPRESS_ADMIN_EMAIL}" --allow-root
+
+    # データベースを更新し、言語パックをインストールして日本語に設定
+    echo "WordPressの言語設定を日本語にしています..."
+    docker-compose exec wp-cli wp core update-db --allow-root
+    docker-compose exec wp-cli wp language core install ja --allow-root
+    docker-compose exec wp-cli wp site switch-to-locale ja --allow-root
+    echo -e "${GREEN}✅ WordPressのインストールと日本語設定が完了しました。${NC}"
 else
     echo "WordPressは既にインストールされています。"
 fi
 
 # plugins.txtからプラグインをインストール
-if [ -f "plugins.txt" ]; then
+if [ -s "plugins.txt" ]; then # -s: ファイルが存在し、かつ空でないことを確認
     echo "プラグインをインストール・有効化します..."
-    # xargsを使って、ファイル内の各行を引数としてwp-cliに渡す
-    # 空行は無視するように grep . を挟む
-    grep . plugins.txt | xargs -I {} docker-compose exec wp-cli wp plugin install {} --activate --allow-root
+    # xargsではなくwhile readループを使うことで、各行をより確実に処理する
+    while IFS= read -r plugin || [[ -n "$plugin" ]]; do
+        if [ -n "$plugin" ]; then # 空行をスキップ
+            echo "プラグイン '${plugin}' をインストール・有効化しています..."
+            docker-compose exec wp-cli wp plugin install "$plugin" --activate --allow-root
+        fi
+    done < plugins.txt
 fi
 
 # --- 6. 完了メッセージ ---
