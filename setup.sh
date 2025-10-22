@@ -102,11 +102,12 @@ until docker-compose exec wordpress test -f /var/www/html/wp-includes/version.ph
 done
 echo -e "\n${GREEN}✅ WordPressのコアファイルが準備されました。${NC}"
 
-# wp-config.phpを作成
-echo "wp-config.phpを作成しています..."
-docker-compose exec wp-cli wp config create \
-    --dbname="${MYSQL_DATABASE}" --dbuser="${MYSQL_USER}" --dbpass="${MYSQL_PASSWORD}" --dbhost="db:3306" \
-    --allow-root
+# WordPressコンテナがwp-config.phpを自動生成するのを待つ
+echo "wp-config.phpが生成されるのを待っています..."
+until docker-compose exec wordpress test -f /var/www/html/wp-config.php; do
+    echo -n "."
+    sleep 2
+done
 
 # SSL接続エラーを回避するために設定を追加
 docker-compose exec wp-cli wp config set 'MYSQL_CLIENT_FLAGS' 0 --type=variable --anchor='$table_prefix' --allow-root
