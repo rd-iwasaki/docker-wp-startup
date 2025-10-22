@@ -99,7 +99,7 @@ source .env
 
 # データベースが利用可能になるまで待機
 echo "データベースの準備が整うまで待機しています..."
-until docker-compose exec db mysqladmin ping -h"localhost" -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" --silent; do
+until docker-compose exec -T db mysqladmin ping -h"localhost" -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" --silent; do
     echo -n "."
     sleep 2
 done
@@ -107,7 +107,7 @@ echo -e "\n${GREEN}✅ データベースの準備が完了しました。${NC}"
 
 # WordPressのコアファイルがボリュームにコピーされるまで待機
 echo "WordPressのコアファイルが準備されるまで待機しています..."
-until docker-compose exec wordpress test -f /var/www/html/wp-includes/version.php; do
+until docker-compose exec -T wordpress test -f /var/www/html/wp-includes/version.php; do
     echo -n "."
     sleep 2
 done
@@ -115,29 +115,29 @@ echo -e "\n${GREEN}✅ WordPressのコアファイルが準備されました。
 
 # WordPressコンテナがwp-config.phpを自動生成するのを待つ
 echo "wp-config.phpが生成されるのを待っています..."
-until docker-compose exec wordpress test -f /var/www/html/wp-config.php; do
+until docker-compose exec -T wordpress test -f /var/www/html/wp-config.php; do
     echo -n "."
     sleep 2
 done
 
 # SSL接続エラーを回避するために設定を追加
-docker-compose exec wp-cli wp config set 'MYSQL_CLIENT_FLAGS' 0 --type=variable --anchor='$table_prefix' --allow-root
+docker-compose exec -T wp-cli wp config set 'MYSQL_CLIENT_FLAGS' 0 --type=variable --anchor='$table_prefix' --allow-root
 
 echo -e "${GREEN}✅ wp-config.phpが作成されました。${NC}"
 
 # WordPressがインストール済みかチェック
-if ! docker-compose exec wp-cli wp core is-installed --allow-root; then
+if ! docker-compose exec -T wp-cli wp core is-installed --allow-root; then
     echo "WordPressをインストールします..."
 
     # サイト名、管理者情報を指定してインストール
-    docker-compose exec wp-cli wp core install --url="http://localhost:${WORDPRESS_PORT}" --title="${WORDPRESS_SITE_TITLE}" --admin_user="${WORDPRESS_ADMIN_USER}" --admin_password="${WORDPRESS_ADMIN_PASSWORD}" --admin_email="${WORDPRESS_ADMIN_EMAIL}" --allow-root
+    docker-compose exec -T wp-cli wp core install --url="http://localhost:${WORDPRESS_PORT}" --title="${WORDPRESS_SITE_TITLE}" --admin_user="${WORDPRESS_ADMIN_USER}" --admin_password="${WORDPRESS_ADMIN_PASSWORD}" --admin_email="${WORDPRESS_ADMIN_EMAIL}" --allow-root
 
     # データベースを更新し、言語パックをインストールして日本語に設定
     echo "WordPressの言語設定を日本語にしています..."
-    docker-compose exec wp-cli wp core update-db --allow-root
-    docker-compose exec wp-cli wp language core install ja --allow-root
+    docker-compose exec -T wp-cli wp core update-db --allow-root
+    docker-compose exec -T wp-cli wp language core install ja --allow-root
     # 'wp site switch-to-locale'はマルチサイト用。シングルサイトでは'wp option update WPLANG'を使用する。
-    docker-compose exec wp-cli wp option update WPLANG ja --allow-root
+    docker-compose exec -T wp-cli wp option update WPLANG ja --allow-root
     echo -e "${GREEN}✅ WordPressのインストールと日本語設定が完了しました。${NC}"
 else
     echo "WordPressは既にインストールされています。"
@@ -150,7 +150,7 @@ if [ -s "plugins.txt" ]; then # -s: ファイルが存在し、かつ空でな�
     while IFS= read -r plugin || [[ -n "$plugin" ]]; do
         if [ -n "$plugin" ]; then # 空行をスキップ
             echo "プラグイン '${plugin}' をインストール・有効化しています..."
-            docker-compose exec wp-cli wp plugin install "$plugin" --activate --allow-root
+            docker-compose exec -T wp-cli wp plugin install "$plugin" --activate --allow-root
         fi
     done < plugins.txt
 fi
