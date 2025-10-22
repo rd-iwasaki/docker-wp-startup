@@ -21,7 +21,6 @@ mkdir -p wordpress
 declare -a FILES=(
     ".env.example"
     "docker-compose.yml"
-    "plugins.txt"
 )
 
 # 各ファイルをダウンロード
