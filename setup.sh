@@ -128,16 +128,12 @@ echo -e "${GREEN}✅ wp-config.phpが作成されました。${NC}"
 if ! docker-compose exec -T wp-cli wp core is-installed --allow-root; then
     echo "WordPressをインストールします..."
 
-    # 最初に日本語言語パックをインストール
-    echo "WordPressの言語設定を日本語にしています..."
-    docker-compose exec -T wp-cli wp language core install ja --allow-root
-
-    # --locale=ja を指定して、サイトと管理者ユーザーの言語を日本語でインストール
-    docker-compose exec -T wp-cli wp core install --url="http://localhost:${WORDPRESS_PORT}" --title="${WORDPRESS_SITE_TITLE}" --admin_user="${WORDPRESS_ADMIN_USER}" --admin_password="${WORDPRESS_ADMIN_PASSWORD}" --admin_email="${WORDPRESS_ADMIN_EMAIL}" --locale=ja --allow-root
+    # サイト名、管理者情報を指定してインストール (言語はdocker-compose.ymlのWORDPRESS_LOCALEで設定)
+    docker-compose exec -T wp-cli wp core install --url="http://localhost:${WORDPRESS_PORT}" --title="${WORDPRESS_SITE_TITLE}" --admin_user="${WORDPRESS_ADMIN_USER}" --admin_password="${WORDPRESS_ADMIN_PASSWORD}" --admin_email="${WORDPRESS_ADMIN_EMAIL}" --allow-root
 
     # 念のためデータベースを更新
     docker-compose exec -T wp-cli wp core update-db --allow-root
-    echo -e "${GREEN}✅ WordPressのインストールと日本語設定が完了しました。${NC}"
+    echo -e "${GREEN}✅ WordPressのインストールが完了しました。${NC}"
 else
     echo "WordPressは既にインストールされています。"
 fi
