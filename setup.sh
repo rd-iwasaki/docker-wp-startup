@@ -148,7 +148,7 @@ echo ""
 echo -e "${GREEN}✅ 環境構築が完了しました！${NC}"
 
 # .envファイルからポート番号を読み込んでURLを表示
-echo "WordPressサイトにアクセスしてください: ${YELLOW}http://localhost:${WORDPRESS_PORT}/wp-admin/${NC}"
-echo "管理者ユーザー名: ${YELLOW}${WORDPRESS_ADMIN_USER}${NC}"
-echo "管理者パスワード: ${YELLOW}${WORDPRESS_ADMIN_PASSWORD}${NC}"
+echo -e "WordPressサイトにアクセスしてください: ${YELLOW}http://localhost:${WORDPRESS_PORT}/wp-admin/${NC}"
+echo -e "管理者ユーザー名: ${YELLOW}${WORDPRESS_ADMIN_USER}${NC}"
+echo -e "管理者パスワード: ${YELLOW}${WORDPRESS_ADMIN_PASSWORD}${NC}"
 echo ""
