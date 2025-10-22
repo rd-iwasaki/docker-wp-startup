@@ -28,6 +28,7 @@ services:
       WORDPRESS_DB_USER: ${MYSQL_USER}
       WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
       WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
+      WORDPRESS_LOCALE: ja
       WORDPRESS_TABLE_PREFIX: wp_
     restart: always
     networks:

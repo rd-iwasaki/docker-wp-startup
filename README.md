@@ -9,29 +9,43 @@ Dockerを利用して、Mac上でWordPressのローカル開発環境を簡単�
 
 ## 使い方
 
-1.  **リポジトリをクローン**
+プロジェクト用のディレクトリを作成し、その中で以下のいずれかの方法でセットアップを実行します。
+
+### 方法1: コマンド1つで簡単セットアップ（推奨）
+
+ターミナルで以下のコマンドを実行するだけで、必要なファイルがダウンロードされ、セットアップが開始されます。
 
     ```bash
-    git clone <このリポジトリのURL> my-wordpress-site
-    cd my-wordpress-site
+    # my-wordpress-site の部分は好きなディレクトリ名に変更してください
+    mkdir my-wordpress-site && cd my-wordpress-site
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/rd-iwasaki/docker-wp-startup/main/setup.sh)"
     ```
 
-2.  **セットアップスクリプトを実行**
+### 方法2: リポジトリをクローンしてセットアップ
 
-    ターミナルで以下のコマンドを実行します。
+手動でファイルを管理したい場合は、リポジトリをクローンしてからスクリプトを実行します。
 
     ```bash
+    git clone https://github.com/rd-iwasaki/docker-wp-startup.git my-wordpress-site
+    cd my-wordpress-site
     bash setup.sh
     ```
 
-3.  **`.env`ファイルを編集**
+---
+
+### セットアップ手順（共通）
+
+上記いずれかの方法でセットアップを開始すると、以下の手順で進みます。
+
+1.  **`.env`ファイルを編集**
 
     スクリプトが一時停止し、`.env`ファイルの編集を促されます。エディタで`.env`ファイルを開き、WordPress, PHP, MySQLのバージョンなどを好みの設定に変更してください。
 
-4.  **セットアップを再開**
+2.  **セットアップを再開**
 
     `.env`の編集が終わったら、ターミナルに戻って`Enter`キーを押してください。Dockerコンテナのビルドと起動が自動的に始まります。
 
-5.  **アクセス**
+3.  **ログイン**
 
-    セットアップ完了後、ターミナルに表示されるURL（デフォルト: `http://localhost:8080`）にブラウザでアクセスすると、WordPressの初期設定画面が表示されます。
+    セットアップが完了すると、ターミナルにWordPress管理画面のURL、管理者ユーザー名、パスワードが表示されます。
+    表示された情報を使って、すぐにWordPressにログインできます。
