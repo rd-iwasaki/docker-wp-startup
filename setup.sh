@@ -59,12 +59,28 @@ if [ ! -f .env ]; then
     read -p "" < /dev/tty
 fi
 
+# --- 4. PHP設定ファイルの生成 ---
+echo -e "${GREEN}▶ PHP設定ファイルを作成します...${NC}"
+mkdir -p php
+
+# .envから変数を読み込む
+source .env
+
+# uploads.ini ファイルを生成（変数が未定義の場合はデフォルト値を使用）
+cat <<EOL > php/uploads.ini
+file_uploads = On
+upload_max_filesize = ${PHP_UPLOAD_MAX_FILESIZE:-256M}
+post_max_size = ${PHP_POST_MAX_SIZE:-256M}
+EOL
+
+echo -e "${GREEN}✅ PHP設定ファイルを作成しました。${NC}"
+
 # --- 4. Dockerコンテナのビルドと起動 ---
 echo -e "${GREEN}▶ Dockerコンテナをビルドし、起動します...${NC}"
 
-# Dockerデーモンが起動しているか確認
+# Docker Desktopが起動しているか確認
 if ! docker info &> /dev/null; then
-    echo -e "${RED}❌ Dockerデーモンが起動していません。Docker Desktopを起動してから再度お試しください。${NC}"
+    echo -e "${RED}❌ Dockerが起動していません。Docker Desktopを起動してから再度お試しください。${NC}"
     exit 1
 fi
 
@@ -124,6 +140,18 @@ docker-compose exec -T wp-cli wp config set 'MYSQL_CLIENT_FLAGS' 0 --type=variab
 
 echo -e "${GREEN}✅ wp-config.phpが作成されました。${NC}"
 
+# データベース接続が確立されるまでリトライ
+echo "データベース接続を確立しています..."
+max_retries=10
+retry_count=0
+until docker-compose exec -T wp-cli wp db check --allow-root >/dev/null 2>&1 || [ $retry_count -eq $max_retries ]; do
+    echo -n "."
+    sleep 2
+    ((retry_count++))
+done
+
+echo -e "\n${GREEN}✅ データベース接続を確立しました。${NC}"
+
 # WordPressがインストール済みかチェック
 if ! docker-compose exec -T wp-cli wp core is-installed --allow-root; then
     echo "WordPressをインストールします..."
@@ -132,10 +160,27 @@ if ! docker-compose exec -T wp-cli wp core is-installed --allow-root; then
     docker-compose exec -T wp-cli wp core install --url="http://localhost:${WORDPRESS_PORT}" --title="${WORDPRESS_SITE_TITLE}" --admin_user="${WORDPRESS_ADMIN_USER}" --admin_password="${WORDPRESS_ADMIN_PASSWORD}" --admin_email="${WORDPRESS_ADMIN_EMAIL}" --allow-root
 
     # 念のためデータベースを更新
-    docker-compose exec -T wp-cli wp core update-db --allow-root
+    docker-compose exec -T wp-cli wp core update-db --allow-root >/dev/null
     echo -e "${GREEN}✅ WordPressのインストールが完了しました。${NC}"
 else
     echo "WordPressは既にインストールされています。"
+fi
+
+# plugins.txt が存在すればプラグインをインストール
+if [ -f plugins.txt ]; then
+    echo "plugins.txt に記載されたプラグインをインストールします..."
+    # コメント行と空行を除外してループ処理
+    grep -vE '^(#|$)' plugins.txt | while read -r plugin; do
+        if [ -n "$plugin" ]; then
+            echo -e "▶ プラグイン '${YELLOW}${plugin}${NC}' をインストール・有効化しています..."
+            docker-compose exec -T wp-cli wp plugin install "$plugin" --activate --allow-root
+        fi
+    done
+    echo -e "${GREEN}✅ プラグインのインストールが完了しました。${NC}"
+
+    # プラグインインストール後にファイルの所有権をwww-dataに変更
+    echo "プラグインディレクトリの所有権を更新しています..."
+    docker-compose exec -T wordpress chown -R www-data:www-data /var/www/html/wp-content
 fi
 
 # --- 6. 完了メッセージ ---
