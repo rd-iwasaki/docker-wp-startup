@@ -75,8 +75,11 @@ EOL
 
 # docker-compose.ymlにボリュームマウント設定を追記
 if ! grep -q "uploads.ini" docker-compose.yml; then
-    # sedを使ってwordpressサービスのvolumesセクションにマウント設定を挿入
-    sed -i'.bak' "/^\s*volumes:\s*$/a \ \ \ \ \ \ - ./php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini" docker-compose.yml
+    # macOS(BSD)とLinux(GNU)の両方で動作するsedコマンド
+    # wordpressサービスのvolumesセクションにマウント設定を挿入する
+    sed -i'.bak' -e '/^\s*wordpress:/{' -e ':a' -e 'n' -e '/^\s*volumes:/!ba' -e 'a\' -e '      - ./php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini' -e '}' docker-compose.yml
+    # バックアップファイルを削除
+    rm -f docker-compose.yml.bak
 fi
 echo -e "${GREEN}✅ PHP設定ファイルを作成し、docker-compose.ymlを更新しました。${NC}"
 
@@ -153,7 +156,7 @@ if ! docker-compose exec -T wp-cli wp core is-installed --allow-root; then
     docker-compose exec -T wp-cli wp core install --url="http://localhost:${WORDPRESS_PORT}" --title="${WORDPRESS_SITE_TITLE}" --admin_user="${WORDPRESS_ADMIN_USER}" --admin_password="${WORDPRESS_ADMIN_PASSWORD}" --admin_email="${WORDPRESS_ADMIN_EMAIL}" --allow-root
 
     # 念のためデータベースを更新
-    docker-compose exec -T wp-cli wp core update-db --allow-root
+    docker-compose exec -T wp-cli wp core update-db --allow-root >/dev/null
     echo -e "${GREEN}✅ WordPressのインストールが完了しました。${NC}"
 else
     echo "WordPressは既にインストールされています。"
