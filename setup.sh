@@ -73,19 +73,7 @@ upload_max_filesize = ${PHP_UPLOAD_MAX_FILESIZE:-256M}
 post_max_size = ${PHP_POST_MAX_SIZE:-256M}
 EOL
 
-# docker-compose.ymlにボリュームマウント設定を追記
-if ! grep -q "uploads.ini" docker-compose.yml; then
-    # awkを使ってクロスプラットフォームで動作するようにvolumesセクションにマウント設定を挿入
-    # 一時ファイルに出力してから元のファイルを置き換える
-    awk '
-        /^\s*wordpress:/ { in_wordpress_service=1 }
-        in_wordpress_service && /^\s*volumes:/ {
-            print;
-            print "      - ./php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini";
-            next
-        } { print }' docker-compose.yml > docker-compose.yml.tmp && mv docker-compose.yml.tmp docker-compose.yml
-fi
-echo -e "${GREEN}✅ PHP設定ファイルを作成し、docker-compose.ymlを更新しました。${NC}"
+echo -e "${GREEN}✅ PHP設定ファイルを作成しました。${NC}"
 
 # --- 4. Dockerコンテナのビルドと起動 ---
 echo -e "${GREEN}▶ Dockerコンテナをビルドし、起動します...${NC}"

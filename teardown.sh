@@ -24,6 +24,10 @@ echo "--------------------------------------------------"
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo -e "${GREEN}▶ コンテナとボリュームを削除しています...${NC}"
     docker-compose down -v
+
+    echo -e "${GREEN}▶ 生成されたファイルを削除しています...${NC}"
+    rm -f php/uploads.ini
+
     echo -e "${GREEN}✅ クリーンアップが完了しました。${NC}"
 else
     echo "キャンセルしました。"

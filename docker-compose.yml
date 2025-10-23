@@ -21,6 +21,7 @@ services:
       - db
     volumes:
       - ./wordpress:/var/www/html
+      - ./php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini
     ports:
       - "${WORDPRESS_PORT}:80"
     environment:
