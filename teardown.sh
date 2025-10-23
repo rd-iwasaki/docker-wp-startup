@@ -16,14 +16,26 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
+# Docker Composeコマンドのチェック
+if docker compose version &> /dev/null; then
+    DOCKER_COMPOSE_CMD="docker compose"
+elif docker-compose version &> /dev/null; then
+    DOCKER_COMPOSE_CMD="docker-compose"
+else
+    echo -e "${RED}❌ Docker Composeが見つかりません。Docker Desktopをインストールまたは更新してください。${NC}"
+    exit 1
+fi
+
 echo "--------------------------------------------------"
-echo -e "${YELLOW}警告: これにより、Dockerコンテナとデータベースのデータが完全に削除されます。${NC}"
+echo -e "${RED}警告: これにより、Dockerコンテナとデータベースのデータが完全に削除されます。${NC}"
 read -p "よろしいですか？ (y/N): " -n 1 -r < /dev/tty
+echo ""
 echo "--------------------------------------------------"
 
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo -e "${GREEN}▶ コンテナとボリュームを削除しています...${NC}"
-    docker-compose down -v
+    # 存在するコンテナのみを対象とするため、エラーを無視する
+    ${DOCKER_COMPOSE_CMD} down -v 2>/dev/null || true
 
     echo -e "${GREEN}▶ 生成されたファイルを削除しています...${NC}"
     rm -f php/uploads.ini

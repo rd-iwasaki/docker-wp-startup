@@ -43,6 +43,19 @@ fi
 echo -e "${GREEN}✅ Dockerがインストールされています。${NC}"
 echo ""
 
+# --- 3. Docker Composeコマンドのチェック ---
+if docker compose version &> /dev/null; then
+    DOCKER_COMPOSE_CMD="docker compose"
+elif docker-compose version &> /dev/null; then
+    DOCKER_COMPOSE_CMD="docker-compose"
+else
+    echo -e "${RED}❌ Docker Composeが見つかりません。Docker Desktopをインストールまたは更新してください。${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✅ Docker Composeが見つかりました。(${DOCKER_COMPOSE_CMD})${NC}"
+echo ""
+
+
 # --- 3. .envファイルの作成 ---
 if [ ! -f .env ]; then
     echo -e "${YELLOW}▶ .envファイルが見つかりません。コピーして作成します。${NC}"
@@ -94,7 +107,10 @@ fi
 
 # WordPressのバージョンに応じて、使用するDockerイメージのタグを決定し、.envファイルに追記する
 # これにより、`curl | bash` 形式で実行した場合でもdocker-composeが変数を確実に読み込める
-echo "" >> .env # 追記前に改行を一つ入れる
+# 既存のWORDPRESS_IMAGE_TAG設定を削除
+sed -i'.bak' '/^WORDPRESS_IMAGE_TAG=/d' .env
+rm -f .env.bak
+
 if [ "${WORDPRESS_VERSION}" = "latest" ]; then
     # 'latest'の場合は、PHPバージョンのみのタグを指定 (例: wordpress:php8.2-apache)
     echo "WORDPRESS_IMAGE_TAG=php${PHP_VERSION}-apache" >> .env
@@ -103,7 +119,7 @@ else
     echo "WORDPRESS_IMAGE_TAG=${WORDPRESS_VERSION}-php${PHP_VERSION}-apache" >> .env
 fi
 
-docker-compose up -d --build
+${DOCKER_COMPOSE_CMD} up -d --build
 
 # --- 5. WordPressの初期設定 ---
 echo ""
@@ -114,7 +130,7 @@ source .env
 
 # データベースが利用可能になるまで待機
 echo "データベースの準備が整うまで待機しています..."
-until docker-compose exec -T db mysqladmin ping -h"localhost" -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" --silent; do
+until ${DOCKER_COMPOSE_CMD} exec -T db mysqladmin ping -h"localhost" -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" --silent; do
     echo -n "."
     sleep 2
 done
@@ -122,7 +138,7 @@ echo -e "\n${GREEN}✅ データベースの準備が完了しました。${NC}"
 
 # WordPressのコアファイルがボリュームにコピーされるまで待機
 echo "WordPressのコアファイルが準備されるまで待機しています..."
-until docker-compose exec -T wordpress test -f /var/www/html/wp-includes/version.php; do
+until ${DOCKER_COMPOSE_CMD} exec -T wordpress test -f /var/www/html/wp-includes/version.php; do
     echo -n "."
     sleep 2
 done
@@ -130,13 +146,13 @@ echo -e "\n${GREEN}✅ WordPressのコアファイルが準備されました。
 
 # WordPressコンテナがwp-config.phpを自動生成するのを待つ
 echo "wp-config.phpが生成されるのを待っています..."
-until docker-compose exec -T wordpress test -f /var/www/html/wp-config.php; do
+until ${DOCKER_COMPOSE_CMD} exec -T wordpress test -f /var/www/html/wp-config.php; do
     echo -n "."
     sleep 2
 done
 
 # SSL接続エラーを回避するために設定を追加
-docker-compose exec -T wp-cli wp config set 'MYSQL_CLIENT_FLAGS' 0 --type=variable --anchor='$table_prefix' --allow-root
+${DOCKER_COMPOSE_CMD} exec -T wp-cli wp config set 'MYSQL_CLIENT_FLAGS' 0 --type=variable --anchor='$table_prefix' --allow-root
 
 echo -e "${GREEN}✅ wp-config.phpが作成されました。${NC}"
 
@@ -144,7 +160,7 @@ echo -e "${GREEN}✅ wp-config.phpが作成されました。${NC}"
 echo "データベース接続を確立しています..."
 max_retries=10
 retry_count=0
-until docker-compose exec -T wp-cli wp db check --allow-root >/dev/null 2>&1 || [ $retry_count -eq $max_retries ]; do
+until ${DOCKER_COMPOSE_CMD} exec -T wp-cli wp db check --allow-root >/dev/null 2>&1 || [ $retry_count -eq $max_retries ]; do
     echo -n "."
     sleep 2
     ((retry_count++))
@@ -153,14 +169,14 @@ done
 echo -e "\n${GREEN}✅ データベース接続を確立しました。${NC}"
 
 # WordPressがインストール済みかチェック
-if ! docker-compose exec -T wp-cli wp core is-installed --allow-root; then
+if ! ${DOCKER_COMPOSE_CMD} exec -T wp-cli wp core is-installed --allow-root 2>/dev/null; then
     echo "WordPressをインストールします..."
 
     # サイト名、管理者情報を指定してインストール (言語はdocker-compose.ymlのWORDPRESS_LOCALEで設定)
-    docker-compose exec -T wp-cli wp core install --url="http://localhost:${WORDPRESS_PORT}" --title="${WORDPRESS_SITE_TITLE}" --admin_user="${WORDPRESS_ADMIN_USER}" --admin_password="${WORDPRESS_ADMIN_PASSWORD}" --admin_email="${WORDPRESS_ADMIN_EMAIL}" --allow-root
+    ${DOCKER_COMPOSE_CMD} exec -T wp-cli wp core install --url="http://localhost:${WORDPRESS_PORT}" --title="${WORDPRESS_SITE_TITLE}" --admin_user="${WORDPRESS_ADMIN_USER}" --admin_password="${WORDPRESS_ADMIN_PASSWORD}" --admin_email="${WORDPRESS_ADMIN_EMAIL}" --allow-root
 
     # 念のためデータベースを更新
-    docker-compose exec -T wp-cli wp core update-db --allow-root >/dev/null
+    ${DOCKER_COMPOSE_CMD} exec -T wp-cli wp core update-db --allow-root >/dev/null
     echo -e "${GREEN}✅ WordPressのインストールが完了しました。${NC}"
 else
     echo "WordPressは既にインストールされています。"
