@@ -59,12 +59,33 @@ if [ ! -f .env ]; then
     read -p "" < /dev/tty
 fi
 
+# --- 4. PHP設定ファイルの生成 ---
+echo -e "${GREEN}▶ PHP設定ファイルを作成します...${NC}"
+mkdir -p php
+
+# .envから変数を読み込む
+source .env
+
+# uploads.ini ファイルを生成（変数が未定義の場合はデフォルト値を使用）
+cat <<EOL > php/uploads.ini
+file_uploads = On
+upload_max_filesize = ${PHP_UPLOAD_MAX_FILESIZE:-256M}
+post_max_size = ${PHP_POST_MAX_SIZE:-256M}
+EOL
+
+# docker-compose.ymlにボリュームマウント設定を追記
+if ! grep -q "uploads.ini" docker-compose.yml; then
+    # sedを使ってwordpressサービスのvolumesセクションにマウント設定を挿入
+    sed -i'.bak' "/^\s*volumes:\s*$/a \ \ \ \ \ \ - ./php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini" docker-compose.yml
+fi
+echo -e "${GREEN}✅ PHP設定ファイルを作成し、docker-compose.ymlを更新しました。${NC}"
+
 # --- 4. Dockerコンテナのビルドと起動 ---
 echo -e "${GREEN}▶ Dockerコンテナをビルドし、起動します...${NC}"
 
-# Dockerデーモンが起動しているか確認
+# Docker Desktopが起動しているか確認
 if ! docker info &> /dev/null; then
-    echo -e "${RED}❌ Dockerデーモンが起動していません。Docker Desktopを起動してから再度お試しください。${NC}"
+    echo -e "${RED}❌ Dockerが起動していません。Docker Desktopを起動してから再度お試しください。${NC}"
     exit 1
 fi
 

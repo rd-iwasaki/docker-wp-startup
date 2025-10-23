@@ -14,9 +14,9 @@ Dockerを利用して、Mac上でWordPressのローカル開発環境を簡単�
 ### 方法1: コマンド1つで簡単セットアップ（推奨）
 
 ターミナルで以下のコマンドを実行するだけで、必要なファイルがダウンロードされ、セットアップが開始されます。
+※{my-wordpress-site}はプロジェクトディレクトリ名に変更してください。
 
     ```bash
-    # my-wordpress-site の部分は好きなディレクトリ名に変更してください
     mkdir my-wordpress-site && cd my-wordpress-site
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/rd-iwasaki/docker-wp-startup/main/setup.sh)"
     ```
