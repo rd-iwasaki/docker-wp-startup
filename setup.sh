@@ -140,6 +140,18 @@ docker-compose exec -T wp-cli wp config set 'MYSQL_CLIENT_FLAGS' 0 --type=variab
 
 echo -e "${GREEN}✅ wp-config.phpが作成されました。${NC}"
 
+# データベース接続が確立されるまでリトライ
+echo "データベース接続を確立しています..."
+max_retries=10
+retry_count=0
+until docker-compose exec -T wp-cli wp db check --allow-root >/dev/null 2>&1 || [ $retry_count -eq $max_retries ]; do
+    echo -n "."
+    sleep 2
+    ((retry_count++))
+done
+
+echo -e "\n${GREEN}✅ データベース接続を確立しました。${NC}"
+
 # WordPressがインストール済みかチェック
 if ! docker-compose exec -T wp-cli wp core is-installed --allow-root; then
     echo "WordPressをインストールします..."
