@@ -162,6 +162,10 @@ if ! docker-compose exec -T wp-cli wp core is-installed --allow-root; then
             fi
         done
         echo -e "${GREEN}✅ プラグインのインストールが完了しました。${NC}"
+
+        # プラグインインストール後にファイルの所有権をwww-dataに変更
+        echo "プラグインディレクトリの所有権を更新しています..."
+        docker-compose exec -T wordpress chown -R www-data:www-data /var/www/html/wp-content
     fi
 else
     echo "WordPressは既にインストールされています。"
