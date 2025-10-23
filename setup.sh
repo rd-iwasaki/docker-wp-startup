@@ -43,6 +43,22 @@ fi
 echo -e "${GREEN}✅ Dockerがインストールされています。${NC}"
 echo ""
 
+# --- 3. 既存環境のクリーンアップ確認 ---
+if [ -f "docker-compose.yml" ] && [ -n "$(docker-compose ps -q)" ]; then
+    echo "--------------------------------------------------"
+    echo -e "${YELLOW}既存のDockerコンテナが起動しています。${NC}"
+    echo -e "セットアップを続行する前に、既存の環境をクリーンアップしますか？"
+    echo -e "${RED}注意: これにより、既存のコンテナ、ネットワーク、ボリューム（DBデータを含む）が削除されます。${NC}"
+    read -p "クリーンアップしますか？ (y/N): " -n 1 -r < /dev/tty
+    echo
+    echo "--------------------------------------------------"
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo -e "${GREEN}▶ 既存の環境をクリーンアップしています...${NC}"
+        docker-compose down -v
+        echo -e "${GREEN}✅ クリーンアップが完了しました。${NC}"
+    fi
+fi
+
 # --- 3. .envファイルの作成 ---
 if [ ! -f .env ]; then
     echo -e "${YELLOW}▶ .envファイルが見つかりません。コピーして作成します。${NC}"
