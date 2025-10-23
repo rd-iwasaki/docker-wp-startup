@@ -49,3 +49,13 @@ Dockerを利用して、Mac上でWordPressのローカル開発環境を簡単�
 
     セットアップが完了すると、ターミナルにWordPress管理画面のURL、管理者ユーザー名、パスワードが表示されます。
     表示された情報を使って、すぐにWordPressにログインできます。
+
+### プラグインの自動インストール
+
+プロジェクトのルートに `plugins.txt` というファイルを作成し、インストールしたいWordPressプラグインのスラッグを1行に1つずつ記述しておくと、`setup.sh`実行時に自動でインストールと有効化が行われます。
+
+例 (`plugins.txt`):
+```
+all-in-one-wp-migration
+wp-multibyte-patch
+```

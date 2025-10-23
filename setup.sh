@@ -150,6 +150,19 @@ if ! docker-compose exec -T wp-cli wp core is-installed --allow-root; then
     # 念のためデータベースを更新
     docker-compose exec -T wp-cli wp core update-db --allow-root >/dev/null
     echo -e "${GREEN}✅ WordPressのインストールが完了しました。${NC}"
+
+    # plugins.txt が存在すればプラグインをインストール
+    if [ -f plugins.txt ]; then
+        echo "plugins.txt に記載されたプラグインをインストールします..."
+        # コメント行と空行を除外してループ処理
+        grep -vE '^(#|$)' plugins.txt | while read -r plugin; do
+            if [ -n "$plugin" ]; then
+                echo -e "▶ プラグイン '${YELLOW}${plugin}${NC}' をインストール・有効化しています..."
+                docker-compose exec -T wp-cli wp plugin install "$plugin" --activate --allow-root
+            fi
+        done
+        echo -e "${GREEN}✅ プラグインのインストールが完了しました。${NC}"
+    fi
 else
     echo "WordPressは既にインストールされています。"
 fi
