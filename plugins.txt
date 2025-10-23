@@ -1,3 +1,0 @@
-all-in-one-wp-migration
-# wp-multibyte-patch
-# contact-form-7

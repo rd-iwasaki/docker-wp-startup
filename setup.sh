@@ -105,9 +105,9 @@ fi
 
 docker-compose up -d --build
 
-# --- 5. WordPressの初期設定とプラグインのインストール ---
+# --- 5. WordPressの初期設定 ---
 echo ""
-echo -e "${GREEN}▶ WordPressの初期設定とプラグインのインストールを行います...${NC}"
+echo -e "${GREEN}▶ WordPressの初期設定を行います...${NC}"
 
 # .envから必要な変数を読み込む
 source .env
@@ -164,23 +164,6 @@ if ! docker-compose exec -T wp-cli wp core is-installed --allow-root; then
     echo -e "${GREEN}✅ WordPressのインストールが完了しました。${NC}"
 else
     echo "WordPressは既にインストールされています。"
-fi
-
-# plugins.txt が存在すればプラグインをインストール
-if [ -f plugins.txt ]; then
-    echo "plugins.txt に記載されたプラグインをインストールします..."
-    # コメント行と空行を除外してループ処理
-    grep -vE '^(#|$)' plugins.txt | while read -r plugin; do
-        if [ -n "$plugin" ]; then
-            echo -e "▶ プラグイン '${YELLOW}${plugin}${NC}' をインストール・有効化しています..."
-            docker-compose exec -T wp-cli wp plugin install "$plugin" --activate --allow-root
-        fi
-    done
-    echo -e "${GREEN}✅ プラグインのインストールが完了しました。${NC}"
-
-    # プラグインインストール後にファイルの所有権をwww-dataに変更
-    echo "プラグインディレクトリの所有権を更新しています..."
-    docker-compose exec -T wordpress chown -R www-data:www-data /var/www/html/wp-content
 fi
 
 # --- 6. 完了メッセージ ---
